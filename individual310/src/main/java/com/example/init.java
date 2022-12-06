@@ -18,7 +18,7 @@ public class init {
         
         while (state) {
             //ask a random question
-            question = bot.randomQuestion();
+            question = bot.randomQuestion(sc);
             response = tagger.tag(sc.nextLine());
             System.out.println(response);
 
@@ -27,7 +27,7 @@ public class init {
             //end conversation
             if (response.toLowerCase().contains("end the conversation")) {
                 state = false;
-                bot.endConversation();
+                bot.endConversation(sc);
 
                 sc.close();
             }

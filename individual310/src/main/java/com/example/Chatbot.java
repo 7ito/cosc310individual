@@ -1,7 +1,14 @@
 package com.example;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.ArrayList;
+import com.google.cloud.translate.Translate;
+import com.google.cloud.translate.Translate.TranslateOption;
+import com.google.cloud.translate.TranslateOptions;
+import com.google.cloud.translate.Translation;
+import io.github.fastily.jwiki.core.*;
+import io.github.fastily.jwiki.dwrap.*;
 
 public class Chatbot {
 
@@ -17,7 +24,7 @@ public class Chatbot {
         questions.add("Are you a cat person or a dog person?");
     }
 
-    public String randomQuestion(){
+    public String randomQuestion(Scanner in) throws IOException{
         //pick a random question from the questionlist
         if (!questions.isEmpty()) {
             int index = new Random().nextInt(questions.size());
@@ -27,7 +34,7 @@ public class Chatbot {
 			return question;
         } else {
             System.out.println("Oops, I ran out of questions!");
-            endConversation();
+            endConversation(in);
 			return "Oops, I ran out of questions!";
         }
     }
@@ -95,15 +102,17 @@ public class Chatbot {
     	}
     }
 
-    public void endConversation() {
-		askForFeedBack();
+    public void endConversation(Scanner in) throws IOException {
+		askTranslate(in);
+		askWiki(in);
+		askForFeedBack(in);
 		System.out.println("It was nice talking to you. Hope your study goes well!");
         System.exit(0);
     }
     
-	public void askForFeedBack(){
+	public void askForFeedBack(Scanner in){
 		System.out.println("Please describe your experience!");
-		Scanner in  = new Scanner(System.in);
+		//Scanner in  = new Scanner(System.in);
 		String ans = in.nextLine();
 		sentimentAnalyzer SA = new sentimentAnalyzer();
 		int sentScore = SA.getSentimentInt(ans);
@@ -113,6 +122,79 @@ public class Chatbot {
 		else{
 			System.out.println("I'm glad to hear that! Hope I'm able to better assist you in the future!");
 		}
-		in.close();
+		//in.close();
+	}
+
+	public void askWiki(Scanner in) {
+		System.out.println("Is there anything from our conversation that you would like to look up?");
+		Wiki wiki = new Wiki.Builder().build();
+		//Scanner in = new Scanner(System.in);
+		String ans = in.nextLine();
+		sentimentAnalyzer SA = new sentimentAnalyzer();
+		int sentScore = SA.getSentimentInt(ans);
+		if(sentScore <= 1) {
+			System.out.println("I see, let's move on then.");
+		} else {
+			System.out.println("What would you like to look up?");
+			System.out.println(wiki.getTextExtract(in.nextLine()));
+		}
+		//in.close();
+	}
+
+	public void askTranslate(Scanner in) throws IOException {
+		System.out.println("In our conversation, was there anything that you wanted to translate?");
+		//Scanner in  = new Scanner(System.in);
+		String ans = in.nextLine();
+		sentimentAnalyzer SA = new sentimentAnalyzer();
+		int sentScore = SA.getSentimentInt(ans);
+		if (sentScore <= 1) {
+			System.out.println("I see, then let's move on.");
+		} else {
+			System.out.println("What language would you like to translate to?");
+			String language = in.nextLine().toLowerCase();
+			System.out.println("What would you like to translate?");
+			String toTranslate = in.nextLine().toLowerCase();
+			Translate translate = TranslateOptions.newBuilder().setApiKey("AIzaSyDIZeJpy5mQYMGX6pXyWMOPdTvYYlHfi8g").build().getService();
+			Translation translation = translate.translate(toTranslate, TranslateOption.sourceLanguage("en"), TranslateOption.targetLanguage(getLanguageCode(language)));
+			System.out.println("That means: " + translation.getTranslatedText());
+		}
+		//in.close();
+	}
+
+	public String getLanguageCode(String language) {
+		switch (language) {
+			case "english":
+				return "en";
+			case "chinese":
+				return "zh-CH";
+			case "french":
+				return "fr";
+			case "german":
+				return "de";
+			case "hindi":
+				return "hi";
+			case "indonesian":
+				return "id";
+			case "italian":
+				return "it";
+			case "japanese":
+				return "ja";
+			case "korean":
+				return "ko";
+			case "latin":
+				return "la";
+			case "malay":
+				return "ms";
+			case "polish":
+				return "pl";
+			case "russian":
+				return "ru";
+			case "spanish":
+				return "es";
+			case "vietnamese":
+				return "vi";
+			default:
+				return "en";
+		}
 	}
 }
